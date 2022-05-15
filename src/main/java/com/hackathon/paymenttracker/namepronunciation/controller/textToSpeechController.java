@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.WebDataBinder;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -67,7 +68,7 @@ public class textToSpeechController {
 		//return new String(response, StandardCharsets.UTF_8);
 		return response;
 	}
-	
+	@CrossOrigin
 	@GetMapping(value = "/api/allPronunciations")
 	public  PronunciationList getAllPronunciations()
 	{
