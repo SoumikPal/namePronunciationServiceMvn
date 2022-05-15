@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: com.hackathon.paymenttracker.namepronunciation.NamepronunciationApplicationTests
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 47.582 s - in com.hackathon.paymenttracker.namepronunciation.NamepronunciationApplicationTests
