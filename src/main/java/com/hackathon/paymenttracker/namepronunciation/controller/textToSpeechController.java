@@ -1,10 +1,16 @@
 package com.hackathon.paymenttracker.namepronunciation.controller;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.http.util.ByteArrayBuffer;
@@ -23,12 +29,27 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
+import com.hackathon.paymenttracker.namepronunciation.model.AudioResponse;
 import com.hackathon.paymenttracker.namepronunciation.model.Pronunciation;
 import com.hackathon.paymenttracker.namepronunciation.model.PronunciationList;
 import com.hackathon.paymenttracker.namepronunciation.model.TextToSpeech;
-
+import com.hackathon.paymenttracker.namepronunciation.model.WavStream;
+import com.microsoft.cognitiveservices.speech.PronunciationAssessmentConfig;
+import com.microsoft.cognitiveservices.speech.PronunciationAssessmentGradingSystem;
+import com.microsoft.cognitiveservices.speech.PronunciationAssessmentGranularity;
+import com.microsoft.cognitiveservices.speech.PronunciationAssessmentResult;
+import com.microsoft.cognitiveservices.speech.SpeechConfig;
+import com.microsoft.cognitiveservices.speech.SpeechRecognitionResult;
+import com.microsoft.cognitiveservices.speech.SpeechRecognizer;
+import com.microsoft.cognitiveservices.speech.audio.AudioConfig;
+import com.microsoft.cognitiveservices.speech.audio.AudioInputStream;
+import com.microsoft.cognitiveservices.speech.audio.PullAudioInputStream;
+import com.microsoft.cognitiveservices.speech.audio.PushAudioInputStream;
 @RestController
+@CrossOrigin
 public class textToSpeechController {
+	
+	
 
 	@Autowired
 	RestTemplate restTemplate;
@@ -41,6 +62,37 @@ public class textToSpeechController {
 	@InitBinder
 	public void populateNameRequest(WebDataBinder binder) {
 		binder.setDisallowedFields(new String[] {});
+	}
+	
+	SpeechRecognitionResult  getPhoenticPronunciation(byte[] stream) throws InterruptedException, ExecutionException, TimeoutException
+	{
+		
+		SpeechConfig config = SpeechConfig.fromSubscription("c70c20199fb0429992ac543f60f5fc3e", "eastus");
+
+ 
+        InputStream inputStream = new ByteArrayInputStream(stream);
+
+        // Create the push stream to push audio to.
+        PushAudioInputStream pushStream = AudioInputStream.createPushStream();
+
+        // Creates a speech recognizer using Push Stream as audio input.
+        AudioConfig audioInput = AudioConfig.fromStreamInput(pushStream);
+        
+		PronunciationAssessmentConfig pronunciationAssessmentConfig =
+			    new PronunciationAssessmentConfig("reference text", 
+			        PronunciationAssessmentGradingSystem.HundredMark,
+			        PronunciationAssessmentGranularity.Phoneme);
+
+			SpeechRecognizer recognizer = new SpeechRecognizer(config,audioInput);
+
+			// apply the pronunciation assessment configuration to the speech recognizer
+			pronunciationAssessmentConfig.applyTo(recognizer);
+			//Future<SpeechRecognitionResult> future = recognizer.recognizeOnceAsync();
+			SpeechRecognitionResult result = recognizer.recognizeOnceAsync().get();
+			//SpeechRecognitionResult result = future.get(60, TimeUnit.SECONDS);
+			return result;
+			
+
 	}
 
 	@PostMapping(value = "/api/token")
@@ -56,19 +108,27 @@ public class textToSpeechController {
 	}
 
 	@PostMapping(value = "/api/pronounce")
-	public byte[] GetAudio(@RequestBody TextToSpeech nameRequest) {
+	public  byte[] GetAudio(@RequestBody TextToSpeech nameRequest) throws InterruptedException, ExecutionException, TimeoutException {
 		String content = "<speak version='1.0' xml:lang='en-US'><voice xml:lang='en-US' xml:gender='Male' name='en-US-ChristopherNeural'>"+nameRequest.getName()+"</voice></speak>";
 		
 		HttpHeaders header = new HttpHeaders();
-		header.set("Authorization", nameRequest.getToken());
+		//header.set("Authorization", nameRequest.getToken());
+		header.set("Ocp-Apim-Subscription-Key", key);
 		header.set("Content-Type", "application/ssml+xml");
 		header.set("X-Microsoft-OutputFormat", "audio-16khz-64kbitrate-mono-mp3");
+		//header.set("X-Microsoft-OutputFormat", "riff-24khz-16bit-mono-pcm");
 		HttpEntity<String> request = new HttpEntity<String>(content, header);
-		byte[] response = Base64.encodeBase64(restTemplate.postForObject(serviceEndpoint, request, byte[].class));
+		byte[] origResponse=restTemplate.postForObject(serviceEndpoint, request, byte[].class);
+		byte[] response = Base64.encodeBase64(origResponse);
+		LOGGER.info(response.toString());
+		AudioResponse audioResponse=new AudioResponse();
+		audioResponse.setAudio(response);
 		//return new String(response, StandardCharsets.UTF_8);
+		//return getPhoenticPronunciation(origResponse);
 		return response;
+		
 	}
-	@CrossOrigin
+	
 	@GetMapping(value = "/api/allPronunciations")
 	public  PronunciationList getAllPronunciations()
 	{
