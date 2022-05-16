@@ -137,7 +137,7 @@ public class textToSpeechController {
 			return "name='en-US-JennyNeural'>";
 		else if(voice.equalsIgnoreCase("hi-IN")&&gender.equalsIgnoreCase("male"))
 			return "name='hi-IN-MadhurNeural'>";
-		else if(voice.equalsIgnoreCase("hi-IN")&&gender.equalsIgnoreCase("male"))
+		else if(voice.equalsIgnoreCase("hi-IN")&&gender.equalsIgnoreCase("female"))
 			return "name='hi-IN-SwaraNeural'>";
 		return "name='en-US-ChristopherNeural'>";
 		
