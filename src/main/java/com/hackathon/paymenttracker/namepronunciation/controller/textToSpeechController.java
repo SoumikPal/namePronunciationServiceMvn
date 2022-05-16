@@ -109,8 +109,10 @@ public class textToSpeechController {
 
 	@PostMapping(value = "/api/pronounce")
 	public  byte[] GetAudio(@RequestBody TextToSpeech nameRequest) throws InterruptedException, ExecutionException, TimeoutException {
-		String content = "<speak version='1.0' xml:lang='en-US'><voice xml:lang='en-US' xml:gender='Male' name='en-US-ChristopherNeural'>"+nameRequest.getName()+"</voice></speak>";
-		
+		//String content = "<speak version='1.0' xml:lang='en-US'><voice xml:lang='en-US' xml:gender='Male' name='en-US-ChristopherNeural'>"+nameRequest.getName()+"</voice></speak>";
+		String voice=getVoice(nameRequest.getVoiceregion(),nameRequest.getGender());
+		//String voice=getVoice("en-Us", "female");
+		String content = "<speak version='1.0' xml:lang='en-US'><voice xml:lang='en-US' xml:gender='Male' "+voice+nameRequest.getName()+"</voice></speak>";
 		HttpHeaders header = new HttpHeaders();
 		//header.set("Authorization", nameRequest.getToken());
 		header.set("Ocp-Apim-Subscription-Key", key);
@@ -126,6 +128,21 @@ public class textToSpeechController {
 		//return new String(response, StandardCharsets.UTF_8);
 		//return getPhoenticPronunciation(origResponse);
 		return response;
+		
+	}
+	public String getVoice(String voice,String gender) {
+		if(voice.equalsIgnoreCase("en-US")&&gender.equalsIgnoreCase("male"))
+			return "name='en-US-ChristopherNeural'>";
+		else if(voice.equalsIgnoreCase("en-US")&&gender.equalsIgnoreCase("female"))
+			return "name='en-US-JennyNeural'>";
+		else if(voice.equalsIgnoreCase("hi-IN")&&gender.equalsIgnoreCase("male"))
+			return "name='hi-IN-MadhurNeural'>";
+		else if(voice.equalsIgnoreCase("hi-IN")&&gender.equalsIgnoreCase("male"))
+			return "name='hi-IN-SwaraNeural'>";
+		return "name='en-US-ChristopherNeural'>";
+		
+			
+		
 		
 	}
 	
